@@ -1,0 +1,37 @@
+name: Show GitHub Runner OIDC Token
+
+on:
+  workflow_dispatch: # manual trigger for testing
+
+permissions:
+  id-token: write       # allow requesting OIDC token
+  contents: read        # default read permission
+
+jobs:
+  print-oidc-token:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Install jq
+      run: sudo apt-get update && sudo apt-get install -y jq
+
+    - name: Fetch OIDC token
+      id: get_token
+      run: |
+        TOKEN_URL="$ACTIONS_ID_TOKEN_REQUEST_URL?audience=api://Azure"
+        TOKEN_VALUE=$(curl -sH "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$TOKEN_URL" | jq -r '.value')
+        echo "TOKEN=$TOKEN_VALUE" >> $GITHUB_ENV
+
+    - name: Decode and print OIDC token payload
+      run: |
+        # JWTs are base64url encoded, split by '.': header.payload.signature
+        PAYLOAD=$(echo $TOKEN | cut -d '.' -f2)
+
+        # Add padding for base64 decode
+        mod4=$(( ${#PAYLOAD} % 4 ))
+        if [ $mod4 -eq 2 ]; then PAYLOAD="$PAYLOAD==" 
+        elif [ $mod4 -eq 3 ]; then PAYLOAD="$PAYLOAD=" 
+        fi
+
+        echo "OIDC Token payload JSON:"
+        echo $PAYLOAD | base64 --decode | jq .
