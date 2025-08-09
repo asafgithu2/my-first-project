@@ -1,37 +1,47 @@
-name: Show GitHub Runner OIDC Token
+name: Show Full GitHub Runner OIDC JWT Token
 
 on:
-  workflow_dispatch: # manual trigger for testing
+  workflow_dispatch:  # manual trigger
 
 permissions:
-  id-token: write       # allow requesting OIDC token
-  contents: read        # default read permission
+  id-token: write
+  contents: read
 
 jobs:
-  print-oidc-token:
+  print-oidc-jwt:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Install jq
-      run: sudo apt-get update && sudo apt-get install -y jq
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
 
-    - name: Fetch OIDC token
-      id: get_token
-      run: |
-        TOKEN_URL="$ACTIONS_ID_TOKEN_REQUEST_URL?audience=api://Azure"
-        TOKEN_VALUE=$(curl -sH "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$TOKEN_URL" | jq -r '.value')
-        echo "TOKEN=$TOKEN_VALUE" >> $GITHUB_ENV
+      - name: Fetch OIDC token
+        id: get_token
+        run: |
+          TOKEN_URL="$ACTIONS_ID_TOKEN_REQUEST_URL?audience=api://Azure"
+          TOKEN_VALUE=$(curl -sH "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$TOKEN_URL" | jq -r '.value')
+          echo "OIDC_TOKEN=$TOKEN_VALUE" >> $GITHUB_ENV
 
-    - name: Decode and print OIDC token payload
-      run: |
-        # JWTs are base64url encoded, split by '.': header.payload.signature
-        PAYLOAD=$(echo $TOKEN | cut -d '.' -f2)
+      - name: Print full raw JWT token
+        run: |
+          echo "Full OIDC JWT token:"
+          echo "$OIDC_TOKEN"
 
-        # Add padding for base64 decode
-        mod4=$(( ${#PAYLOAD} % 4 ))
-        if [ $mod4 -eq 2 ]; then PAYLOAD="$PAYLOAD==" 
-        elif [ $mod4 -eq 3 ]; then PAYLOAD="$PAYLOAD=" 
-        fi
+      - name: Decode and print JWT header
+        run: |
+          HEADER=$(echo $OIDC_TOKEN | cut -d '.' -f1)
+          mod4=$(( ${#HEADER} % 4 ))
+          if [ $mod4 -eq 2 ]; then HEADER="$HEADER==" 
+          elif [ $mod4 -eq 3 ]; then HEADER="$HEADER=" 
+          fi
+          echo "JWT header JSON:"
+          echo $HEADER | base64 --decode | jq .
 
-        echo "OIDC Token payload JSON:"
-        echo $PAYLOAD | base64 --decode | jq .
+      - name: Decode and print JWT payload
+        run: |
+          PAYLOAD=$(echo $OIDC_TOKEN | cut -d '.' -f2)
+          mod4=$(( ${#PAYLOAD} % 4 ))
+          if [ $mod4 -eq 2 ]; then PAYLOAD="$PAYLOAD==" 
+          elif [ $mod4 -eq 3 ]; then PAYLOAD="$PAYLOAD=" 
+          fi
+          echo "JWT payload JSON:"
+          echo $PAYLOAD | base64 --decode | jq .
