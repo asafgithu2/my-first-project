@@ -17,36 +17,39 @@ jobs:
       - name: Fetch OIDC token
         id: get_token
         run: |
-          TOKEN_URL="$ACTIONS_ID_TOKEN_REQUEST_URL?audience=api://Azure"
-          TOKEN_VALUE=$(curl -sH "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$TOKEN_URL" | jq -r '.value')
-          echo "OIDC_TOKEN=$TOKEN_VALUE" >> $GITHUB_ENV
-
-      - name: Print full JWT token
-        run: echo "Full JWT token: $OIDC_TOKEN"
+          TOKEN_URL="${ACTIONS_ID_TOKEN_REQUEST_URL}?audience=api://Azure"
+          TOKEN_VALUE=$(curl -sH "Authorization: Bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" "$TOKEN_URL" | jq -r '.value')
+          echo "OIDC_TOKEN=${TOKEN_VALUE}" >> $GITHUB_ENV
 
       - name: Print JWT Header
         run: |
-          HEADER=$(echo $OIDC_TOKEN | cut -d '.' -f1)
+          HEADER=$(echo "$OIDC_TOKEN" | cut -d '.' -f1)
           echo "JWT Header (base64url): $HEADER"
           mod4=$(( ${#HEADER} % 4 ))
-          if [ $mod4 -eq 2 ]; then HEADER="$HEADER==" 
-          elif [ $mod4 -eq 3 ]; then HEADER="$HEADER=" 
+          if [ $mod4 -eq 2 ]; then HEADER="${HEADER}==" 
+          elif [ $mod4 -eq 3 ]; then HEADER="${HEADER}=" 
           fi
           echo "Decoded Header JSON:"
-          echo $HEADER | base64 --decode | jq .
+          echo "$HEADER" | base64 --decode | jq .
+        env:
+          OIDC_TOKEN: ${{ env.OIDC_TOKEN }}
 
       - name: Print JWT Payload
         run: |
-          PAYLOAD=$(echo $OIDC_TOKEN | cut -d '.' -f2)
+          PAYLOAD=$(echo "$OIDC_TOKEN" | cut -d '.' -f2)
           echo "JWT Payload (base64url): $PAYLOAD"
           mod4=$(( ${#PAYLOAD} % 4 ))
-          if [ $mod4 -eq 2 ]; then PAYLOAD="$PAYLOAD==" 
-          elif [ $mod4 -eq 3 ]; then PAYLOAD="$PAYLOAD=" 
+          if [ $mod4 -eq 2 ]; then PAYLOAD="${PAYLOAD}==" 
+          elif [ $mod4 -eq 3 ]; then PAYLOAD="${PAYLOAD}=" 
           fi
           echo "Decoded Payload JSON:"
-          echo $PAYLOAD | base64 --decode | jq .
+          echo "$PAYLOAD" | base64 --decode | jq .
+        env:
+          OIDC_TOKEN: ${{ env.OIDC_TOKEN }}
 
       - name: Print JWT Signature
         run: |
-          SIGNATURE=$(echo $OIDC_TOKEN | cut -d '.' -f3)
+          SIGNATURE=$(echo "$OIDC_TOKEN" | cut -d '.' -f3)
           echo "JWT Signature (base64url): $SIGNATURE"
+        env:
+          OIDC_TOKEN: ${{ env.OIDC_TOKEN }}
