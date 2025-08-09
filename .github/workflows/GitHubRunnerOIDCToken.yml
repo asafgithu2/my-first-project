@@ -26,7 +26,7 @@ jobs:
           echo "Full OIDC JWT token:"
           echo "$OIDC_TOKEN"
 
-      - name: Decode and print JWT header
+      - name: Decode and print JWT header 1 
         run: |
           HEADER=$(echo $OIDC_TOKEN | cut -d '.' -f1)
           mod4=$(( ${#HEADER} % 4 ))
@@ -36,9 +36,19 @@ jobs:
           echo "JWT header JSON:"
           echo $HEADER | base64 --decode | jq .
 
-      - name: Decode and print JWT payload
+      - name: Decode and print JWT payload 2 
         run: |
           PAYLOAD=$(echo $OIDC_TOKEN | cut -d '.' -f2)
+          mod4=$(( ${#PAYLOAD} % 4 ))
+          if [ $mod4 -eq 2 ]; then PAYLOAD="$PAYLOAD==" 
+          elif [ $mod4 -eq 3 ]; then PAYLOAD="$PAYLOAD=" 
+          fi
+          echo "JWT payload JSON:"
+          echo $PAYLOAD | base64 --decode | jq .
+
+      - name: Decode and print JWT payload 3
+        run: |
+          PAYLOAD=$(echo $OIDC_TOKEN | cut -d '.' -f3)
           mod4=$(( ${#PAYLOAD} % 4 ))
           if [ $mod4 -eq 2 ]; then PAYLOAD="$PAYLOAD==" 
           elif [ $mod4 -eq 3 ]; then PAYLOAD="$PAYLOAD=" 
