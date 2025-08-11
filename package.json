@@ -1,0 +1,19 @@
+{
+  "name": "@asafgithu2/my-first-project",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "exit 0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/asafgithu2/my-first-project.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/asafgithu2/my-first-project/issues"
+  },
+  "homepage": "https://github.com/asafgithu2/my-first-project#readme"
+}
