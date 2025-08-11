@@ -8,7 +8,7 @@
   },
   "publishConfig": {
     "@asafgithu2:registry": "https://npm.pkg.github.com"
-  }
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/asafgithu2/my-first-project.git"
